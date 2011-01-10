@@ -142,7 +142,11 @@
           			});
           
 			// Append the file to the DOM so we don't have to re-request it:
-			$('<div>').attr('id', url).html(data).appendTo('body');
+			$('<div>')
+				.attr('id', url)
+				.html(data)
+				.appendTo('body')
+				.hide();
 		}
 	  // fixes an annoying horizontal scrollbar.
 	  function _overflowFixAdd(){($.browser.msie) ? $("body, html").css({overflowX:'hidden'}) : $("body").css({overflowX:'hidden'});}
