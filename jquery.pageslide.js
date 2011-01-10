@@ -6,6 +6,7 @@
 		    duration:       "normal", // Accepts standard jQuery effects speeds (i.e. fast, normal or milliseconds)
 		    direction:      "left", // default direction is left.
 		    modal:          false, // if true, the only way to close the pageslide is to define an explicit close class. 
+		    ajaxReload:		true,
 		    _identifier: $(this)
 		}, options);
 		
@@ -93,8 +94,8 @@
 			
 			var pageURL = $(elm).attr("href");
 			var pageContent = $('div[id=' + pageURL + ']');
-			// if the page is on the DOM, use it.  Otherwise, grab it from ajax
-			if (pageContent.length){
+			// If ajaxReload is false, if the page is on the DOM, use it.  Otherwise, grab it from ajax
+			if (!settings.ajaxReload && pageContent.length){
 				var data = pageContent.html();
 				_doSlide(data, pageURL);
 			} else {
@@ -140,13 +141,16 @@
 							.unbind('click');
               			});
           			});
-          
-			// Append the file to the DOM so we don't have to re-request it:
-			$('<div>')
-				.attr('id', url)
-				.html(data)
-				.appendTo('body')
-				.hide();
+			
+			// We don't need to save this to the DOM if we are going to re-request the pages every time:
+			if (!settings.ajaxReload){
+				// Append the file to the DOM so we don't have to re-request it:
+				$('<div>')
+					.attr('id', url)
+					.html(data)
+					.appendTo('body')
+					.hide();
+			}
 		}
 	  // fixes an annoying horizontal scrollbar.
 	  function _overflowFixAdd(){($.browser.msie) ? $("body, html").css({overflowX:'hidden'}) : $("body").css({overflowX:'hidden'});}
@@ -170,7 +174,6 @@
 // pageSlideClose allows the system to automatically close any pageslide that is currently open in the view.
 (function($){
   $.fn.pageSlideClose = function(options) {
-    
     var settings = $.extend({
 		    width:          "300px", // Accepts fixed widths
 		    duration:       "normal", // Accepts standard jQuery effects speeds (i.e. fast, normal or milliseconds)
