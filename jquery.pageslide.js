@@ -90,22 +90,23 @@
 		  }
     	$("#pageslide-slide-wrap").animate({width: settings.width}, settings.duration);
 		  $("#pageslide-body-wrap").animate(direction, settings.duration, function() {
-	      $.ajax({
-  		      type: "GET",
-  		      url: $(elm).attr("href"),
-  		      success: function(data){
-  		        $("#pageslide-content").css("width",settings.width).html(data)
-  		          .queue(function(){
-  		            $(this).dequeue();
-  		            
-  		            // add hook for a close button
-  		            $(this).find('.pageslide-close').unbind('click').click(function(elm){
-  		              _closeSlide(elm);
-  		              $(this).find('pageslide-close').unbind('click');
-  		            });
-  		          });
-  		      }
-  		    });
+			
+			var pageURL = $(elm).attr("href");
+			var pageContent = $('div[id=' + pageURL + ']');
+			// if the page is on the DOM, use it.  Otherwise, grab it from ajax
+			if (pageContent.length){
+				var data = pageContent.html();
+				_doSlide(data, pageURL);
+			} else {
+                $.ajax({
+                    type: "GET",
+                    url: pageURL,
+                    success: function(data){
+                        _doSlide(data, pageURL);
+                    }
+                });
+			}
+			
 		  });
 		};
 		
@@ -121,7 +122,28 @@
 	      $("#pageslide-blanket").toggle().animate({opacity:'0.8'}, 'fast','linear');
 	    }
 	  };
-
+	
+		var _doSlide = function(data, url){
+			$("#pageslide-content")
+				.css("width", settings.width)
+				.html(data)
+				.queue(function(){
+					$(this).dequeue();
+					// add hook for a close button
+					
+					$(this).find('.pageslide-close')
+						.unbind('click')
+						.click(function(elm){
+							_closeSlide(elm);
+							$(this)
+							.find('pageslide-close')
+							.unbind('click');
+              			});
+          			});
+          
+			// Append the file to the DOM so we don't have to re-request it:
+			$('<div>').attr('id', url).html(data).appendTo('body');
+		}
 	  // fixes an annoying horizontal scrollbar.
 	  function _overflowFixAdd(){($.browser.msie) ? $("body, html").css({overflowX:'hidden'}) : $("body").css({overflowX:'hidden'});}
 		
