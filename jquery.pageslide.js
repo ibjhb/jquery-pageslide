@@ -7,6 +7,7 @@
 		    direction:      "left", // default direction is left.
 		    modal:          false, // if true, the only way to close the pageslide is to define an explicit close class. 
 		    ajaxReload:		true,
+			idPrefix:		'slide',
 		    _identifier: $(this)
 		}, options);
 		
@@ -65,6 +66,15 @@
         $("body").append( psSlideBlanket );
   	    $("#pageslide-blanket").click(function(){ return false; });
       }
+	  
+	  // Create empty div for page/dom storage later.
+	  if (!settings.ajaxReload){
+			if (!$('div#pageSlideStore').length){
+				$('<div>')
+					.attr('id', 'pageSlideStore')
+					.appendTo('body');
+			}
+		} 
           	    
 	    // Callback events for window resizing
 	    $(window).resize(function(){
@@ -93,21 +103,22 @@
 		  $("#pageslide-body-wrap").animate(direction, settings.duration, function() {
 			
 			var pageURL = $(elm).attr("href");
-			var pageContent = $('div[id=' + pageURL + ']');
+			var idSelector = settings.idPrefix + pageURL.replace(".", "");
+			var pageContent = $('div#pageSlideStore').find("div#" + idSelector);
+			
 			// If ajaxReload is false, if the page is on the DOM, use it.  Otherwise, grab it from ajax
 			if (!settings.ajaxReload && pageContent.length){
 				var data = pageContent.html();
-				_doSlide(data, pageURL);
+				_doSlide(data, idSelector);
 			} else {
                 $.ajax({
                     type: "GET",
                     url: pageURL,
                     success: function(data){
-                        _doSlide(data, pageURL);
+                        _doSlide(data, idSelector);
                     }
                 });
 			}
-			
 		  });
 		};
 		
@@ -124,7 +135,7 @@
 	    }
 	  };
 	
-		var _doSlide = function(data, url){
+		var _doSlide = function(data, idSelector){
 			$("#pageslide-content")
 				.css("width", settings.width)
 				.html(data)
@@ -142,15 +153,17 @@
               			});
           			});
 			
-			// We don't need to save this to the DOM if we are going to re-request the pages every time:
-			if (!settings.ajaxReload){
-				// Append the file to the DOM so we don't have to re-request it:
-				$('<div>')
-					.attr('id', url)
-					.html(data)
-					.appendTo('body')
-					.hide();
-			}
+				// We don't need to save this to the DOM if we are going to re-request the pages every time:
+				var pageContent = $('div#pageSlideStore').find("div#" + idSelector);
+				if (!settings.ajaxReload && !pageContent.length){
+					// Append the file to the DOM so we don't have to re-request it:
+					$('<div></div>')
+						.attr('id', idSelector)
+						.html(data)
+						.appendTo('body div#pageSlideStore')
+						.hide();
+				}	
+			
 		}
 	  // fixes an annoying horizontal scrollbar.
 	  function _overflowFixAdd(){($.browser.msie) ? $("body, html").css({overflowX:'hidden'}) : $("body").css({overflowX:'hidden'});}
